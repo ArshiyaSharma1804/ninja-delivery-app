@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ninja Deliveries - Rider App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); }
+        .delivery-card { transition: all 0.3s ease; }
+        .delivery-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .status-badge { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    </style>
+</head>
+<body class="bg-red-50">
+    <!-- Header -->
+    <div class="gradient-bg text-white p-4 shadow-lg">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                    <span class="text-2xl">🥷</span>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold">Ninja Deliveries</h1>
+                    <p class="text-sm opacity-90">Rider Dashboard</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-green-400 rounded-full status-badge"></div>
+                    <span class="text-sm font-medium">Online</span>
+                </div>
+                <p class="text-xs opacity-80">Dharamshala Zone</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="p-4 grid grid-cols-3 gap-3">
+        <div class="bg-white rounded-lg p-3 text-center shadow-sm">
+            <div class="text-2xl font-bold text-red-600" id="todayDeliveries">12</div>
+            <div class="text-xs text-gray-600">Today's Deliveries</div>
+        </div>
+        <div class="bg-white rounded-lg p-3 text-center shadow-sm">
+            <div class="text-2xl font-bold text-red-600" id="todayEarnings">₹840</div>
+            <div class="text-xs text-gray-600">Today's Earnings</div>
+        </div>
+        <div class="bg-white rounded-lg p-3 text-center shadow-sm">
+            <div class="text-2xl font-bold text-red-600">4.8</div>
+            <div class="text-xs text-gray-600">Rating</div>
+        </div>
+    </div>
+
+    <!-- Weather & Bonus Progress -->
+    <div class="px-4 pb-4 grid grid-cols-1 gap-3">
+        <!-- Weather Widget -->
+        <div class="bg-white rounded-lg p-3 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <span class="text-2xl">☀️</span>
+                    <div>
+                        <p class="text-sm font-medium text-gray-800">Dharamshala</p>
+                        <p class="text-xs text-gray-600">Perfect for deliveries!</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-bold text-gray-800">24°C</p>
+                    <p class="text-xs text-gray-600">Clear Sky</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bonus Progress -->
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-semibold text-gray-800">Daily Bonus Progress</h3>
+                <span class="text-sm font-medium text-red-600" id="bonusProgress">12/15</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
+                <div class="bg-gradient-to-r from-red-500 to-red-600 h-3 rounded-full transition-all duration-500" style="width: 80%" id="progressBar"></div>
+            </div>
+            <p class="text-xs text-gray-600">Complete 3 more deliveries to earn ₹200 bonus! 🎯</p>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div id="homeTab" class="p-4">
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg p-4 shadow-sm mb-4">
+            <h3 class="font-semibold text-gray-800 mb-3">Quick Actions</h3>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="toggleOnlineStatus()" class="bg-green-100 text-green-800 py-3 px-4 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors">
+                    <div class="text-lg mb-1">🟢</div>
+                    Go Offline
+                </button>
+                <button onclick="emergencySupport()" class="bg-red-100 text-red-800 py-3 px-4 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors">
+                    <div class="text-lg mb-1">🚨</div>
+                    Emergency
+                </button>
+                <button onclick="fuelReminder()" class="bg-yellow-100 text-yellow-800 py-3 px-4 rounded-lg text-sm font-medium hover:bg-yellow-200 transition-colors">
+                    <div class="text-lg mb-1">⛽</div>
+                    Fuel Break
+                </button>
+                <button onclick="reportIssue()" class="bg-blue-100 text-blue-800 py-3 px-4 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors">
+                    <div class="text-lg mb-1">📝</div>
+                    Report Issue
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation Map -->
+        <div class="bg-white rounded-lg p-4 shadow-sm mb-4">
+            <h3 class="font-semibold text-gray-800 mb-3">Live Navigation</h3>
+            <div class="w-full h-48 bg-gradient-to-br from-blue-50 to-green-50 rounded-lg flex items-center justify-center mb-3 border-2 border-dashed border-gray-200" id="mapArea">
+                <div class="text-center">
+                    <div class="text-4xl mb-2">🗺️</div>
+                    <p class="text-gray-700 text-sm font-medium">Live Route Tracking</p>
+                    <p class="text-xs text-gray-500">Ninja Delivery Store → Kotwali Bazaar</p>
+                    <div class="mt-2 flex items-center justify-center space-x-2">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <span class="text-xs text-green-600 font-medium">ETA: 12 mins</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="openNavigation()" class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                    🧭 Open in Maps
+                </button>
+                <button onclick="callCustomer()" class="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+                    📞 Call Customer
+                </button>
+            </div>
+        </div>
+
+        <h2 class="text-lg font-semibold mb-3 text-gray-800">Current Delivery</h2>
+        <div id="currentDelivery" class="bg-white rounded-lg p-4 shadow-sm border-l-4 border-red-500">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <h3 class="font-semibold text-gray-800">Order #NJ2024001</h3>
+                    <p class="text-sm text-gray-600">Grocery Items • 4 items</p>
+                </div>
+                <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium">In Transit</span>
+            </div>
+            
+            <div class="space-y-2 mb-4">
+                <div class="flex items-center space-x-2">
+                    <span class="text-green-600">📍</span>
+                    <div>
+                        <p class="text-sm font-medium">Pickup: Ninja Delivery Store</p>
+                        <p class="text-xs text-gray-600">Mall Road, Dharamshala</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-red-600">📍</span>
+                    <div>
+                        <p class="text-sm font-medium">Drop: Priya Sharma</p>
+                        <p class="text-xs text-gray-600">Kotwali Bazaar, Near Temple</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex space-x-2">
+                <button onclick="callCustomer()" class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                    📞 Call Customer
+                </button>
+                <button onclick="openNavigation()" class="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+                    🗺️ Navigate
+                </button>
+                <button onclick="markDelivered()" class="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+                    ✅ Delivered
+                </button>
+            </div>
+            <button onclick="endTrip()" class="w-full mt-2 bg-gray-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors">
+                🏁 End Trip
+            </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scan Tab -->
+    <div id="scanTab" class="p-4 hidden">
+        <h2 class="text-lg font-semibold mb-3 text-gray-800">QR Code Scanner</h2>
+        <div class="bg-white rounded-lg p-6 shadow-sm text-center">
+            <div class="w-48 h-48 mx-auto mb-4 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300" id="scannerArea">
+                <div class="text-center">
+                    <div class="text-6xl mb-2">📱</div>
+                    <p class="text-gray-600 text-sm">Tap to scan QR code</p>
+                </div>
+            </div>
+            <button onclick="startScanning()" class="w-full bg-red-600 text-white py-3 rounded-lg font-medium hover:bg-red-700 transition-colors mb-3">
+                📷 Start Scanning
+            </button>
+            <p class="text-xs text-gray-500">Scan the QR code at the store to get order details</p>
+        </div>
+
+        <!-- Scanned Order Details (Hidden initially) -->
+        <div id="scannedOrder" class="bg-white rounded-lg p-4 shadow-sm mt-4 hidden">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <h3 class="font-semibold text-gray-800">Order #NJ2024004</h3>
+                    <p class="text-sm text-gray-600">Fresh Groceries • 5 items</p>
+                </div>
+                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Ready for Pickup</span>
+            </div>
+            
+            <div class="space-y-2 mb-4">
+                <div class="flex items-center space-x-2">
+                    <span class="text-green-600">🏪</span>
+                    <div>
+                        <p class="text-sm font-medium">Pickup: Ninja Delivery Store</p>
+                        <p class="text-xs text-gray-600">Mall Road, Dharamshala</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-red-600">📍</span>
+                    <div>
+                        <p class="text-sm font-medium">Drop: Rahul Kumar</p>
+                        <p class="text-xs text-gray-600">Mcleod Ganj, Near Main Square</p>
+                        <p class="text-xs text-gray-500">📞 +91 98765 43210</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                <h4 class="font-medium text-sm mb-2">Order Items:</h4>
+                <ul class="text-xs text-gray-600 space-y-1">
+                    <li>• Milk (1L) x2</li>
+                    <li>• Bread (Brown) x1</li>
+                    <li>• Bananas (1kg) x1</li>
+                    <li>• Rice (5kg) x1</li>
+                </ul>
+            </div>
+
+            <div class="flex space-x-2">
+                <button onclick="acceptScannedOrder()" class="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+                    ✅ Accept & Start Trip
+                </button>
+                <button onclick="declineOrder()" class="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors">
+                    ❌ Decline
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Tab -->
+    <div id="ordersTab" class="p-4 hidden">
+        <!-- Notifications -->
+        <div class="bg-white rounded-lg p-4 shadow-sm mb-4">
+            <h3 class="font-semibold text-gray-800 mb-3">📢 Notifications</h3>
+            <div class="space-y-2">
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                    <p class="text-sm font-medium text-blue-800">Peak Hours Bonus Active!</p>
+                    <p class="text-xs text-blue-600">Earn extra ₹25 per delivery until 8 PM</p>
+                </div>
+                <div class="bg-green-50 border-l-4 border-green-500 p-3 rounded">
+                    <p class="text-sm font-medium text-green-800">New High-Priority Zone</p>
+                    <p class="text-xs text-green-600">Mcleod Ganj area has increased demand</p>
+                </div>
+            </div>
+        </div>
+        <h2 class="text-lg font-semibold mb-3 text-gray-800">Available Orders</h2>
+        <div id="pendingOrders" class="space-y-3 mb-6">
+            <div class="delivery-card bg-white rounded-lg p-4 shadow-sm">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Order #NJ2024002</h3>
+                        <p class="text-sm text-gray-600">Vegetables & Fruits • 6 items</p>
+                    </div>
+                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">Ready</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-3">📍 Ninja Delivery Store → Mcleod Ganj</p>
+                <button onclick="acceptOrder('NJ2024002')" class="w-full bg-red-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+                    Accept Order
+                </button>
+            </div>
+
+            <div class="delivery-card bg-white rounded-lg p-4 shadow-sm">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Order #NJ2024003</h3>
+                        <p class="text-sm text-gray-600">Daily Essentials • 8 items</p>
+                    </div>
+                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">Preparing</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-3">📍 Ninja Delivery Store → Naddi</p>
+                <button onclick="acceptOrder('NJ2024003')" class="w-full bg-red-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+                    Accept Order
+                </button>
+            </div>
+        </div>
+
+        <h2 class="text-lg font-semibold mb-3 text-gray-800">Order History</h2>
+        <div class="space-y-3">
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Order #NJ2024001</h3>
+                        <p class="text-sm text-gray-600">Completed • 2 hours ago</p>
+                    </div>
+                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Delivered</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-2">📍 Ninja Delivery Store → Kotwali Bazaar</p>
+                <p class="text-sm font-medium text-green-600">Earned: ₹70</p>
+            </div>
+
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Order #NJ2023999</h3>
+                        <p class="text-sm text-gray-600">Completed • 4 hours ago</p>
+                    </div>
+                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Delivered</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-2">📍 Ninja Delivery Store → Mcleod Ganj</p>
+                <p class="text-sm font-medium text-green-600">Earned: ₹85</p>
+            </div>
+
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Order #NJ2023998</h3>
+                        <p class="text-sm text-gray-600">Completed • 6 hours ago</p>
+                    </div>
+                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Delivered</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-2">📍 Ninja Delivery Store → Naddi</p>
+                <p class="text-sm font-medium text-green-600">Earned: ₹65</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Earnings Tab -->
+    <div id="earningsTab" class="p-4 hidden">
+        <h2 class="text-lg font-semibold mb-3 text-gray-800">Earnings Overview</h2>
+        
+        <!-- Today's Summary -->
+        <div class="bg-white rounded-lg p-4 shadow-sm mb-4">
+            <h3 class="font-semibold text-gray-800 mb-3">Today's Summary</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-red-600" id="earningsDeliveries">12</div>
+                    <div class="text-xs text-gray-600">Deliveries</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600" id="earningsTotal">₹840</div>
+                    <div class="text-xs text-gray-600">Total Earned</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Stats -->
+        <div class="bg-white rounded-lg p-4 shadow-sm mb-4">
+            <h3 class="font-semibold text-gray-800 mb-3">This Week</h3>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Monday</span>
+                    <span class="text-sm font-medium">₹650</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Tuesday</span>
+                    <span class="text-sm font-medium">₹720</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Wednesday</span>
+                    <span class="text-sm font-medium">₹580</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Thursday</span>
+                    <span class="text-sm font-medium">₹890</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Friday</span>
+                    <span class="text-sm font-medium">₹760</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Saturday</span>
+                    <span class="text-sm font-medium">₹920</span>
+                </div>
+                <div class="flex justify-between border-t pt-2">
+                    <span class="text-sm font-semibold">Today (Sunday)</span>
+                    <span class="text-sm font-bold text-red-600">₹840</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bonus Section -->
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+            <h3 class="font-semibold text-gray-800 mb-3">Bonuses & Incentives</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-sm font-medium">Daily Target Bonus</p>
+                        <p class="text-xs text-gray-600">Complete 15 deliveries</p>
+                    </div>
+                    <span class="text-sm font-bold text-orange-600">₹200</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-sm font-medium">Weekend Bonus</p>
+                        <p class="text-xs text-gray-600">Extra ₹50 per delivery</p>
+                    </div>
+                    <span class="text-sm font-bold text-green-600">Active</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Tab -->
+    <div id="profileTab" class="p-4 hidden">
+        <h2 class="text-lg font-semibold mb-3 text-gray-800">Rider Profile</h2>
+        
+        <!-- Profile Info -->
+        <div class="bg-white rounded-lg p-4 shadow-sm mb-4">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                    <span class="text-2xl">👤</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-800">Rider #NJ-DH-001</h3>
+                    <p class="text-sm text-gray-600">Active since Jan 2024</p>
+                    <div class="flex items-center space-x-1 mt-1">
+                        <span class="text-yellow-500">⭐</span>
+                        <span class="text-sm font-medium">4.8 Rating</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 text-center">
+                <div>
+                    <div class="text-xl font-bold text-red-600">1,247</div>
+                    <div class="text-xs text-gray-600">Total Deliveries</div>
+                </div>
+                <div>
+                    <div class="text-xl font-bold text-green-600">98.5%</div>
+                    <div class="text-xs text-gray-600">Success Rate</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehicle Info -->
+        <div class="bg-white rounded-lg p-4 shadow-sm mb-4">
+            <h3 class="font-semibold text-gray-800 mb-3">Vehicle Details</h3>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Type</span>
+                    <span class="text-sm font-medium">Motorcycle</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Registration</span>
+                    <span class="text-sm font-medium">HP-01-AB-1234</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Insurance</span>
+                    <span class="text-sm font-medium text-green-600">Valid</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+            <h3 class="font-semibold text-gray-800 mb-3">Settings</h3>
+            <div class="space-y-3">
+                <button class="w-full text-left py-2 px-3 bg-gray-50 rounded-lg text-sm">
+                    🔔 Notification Settings
+                </button>
+                <button class="w-full text-left py-2 px-3 bg-gray-50 rounded-lg text-sm">
+                    📍 Location Preferences
+                </button>
+                <button class="w-full text-left py-2 px-3 bg-gray-50 rounded-lg text-sm">
+                    💳 Payment Details
+                </button>
+                <button class="w-full text-left py-2 px-3 bg-gray-50 rounded-lg text-sm">
+                    📞 Support & Help
+                </button>
+                <button class="w-full text-left py-2 px-3 bg-red-50 rounded-lg text-sm text-red-600">
+                    🚪 Sign Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
+        <div class="flex justify-around">
+            <button onclick="switchTab('home')" class="flex flex-col items-center py-2 px-2 text-red-600" id="homeBtn">
+                <span class="text-xl mb-1">🏠</span>
+                <span class="text-xs font-medium">Home</span>
+            </button>
+            <button onclick="switchTab('scan')" class="flex flex-col items-center py-2 px-2 text-gray-500" id="scanBtn">
+                <span class="text-xl mb-1">📱</span>
+                <span class="text-xs">Scan</span>
+            </button>
+            <button onclick="switchTab('orders')" class="flex flex-col items-center py-2 px-2 text-gray-500" id="ordersBtn">
+                <span class="text-xl mb-1">📦</span>
+                <span class="text-xs">Orders</span>
+            </button>
+            <button onclick="switchTab('earnings')" class="flex flex-col items-center py-2 px-2 text-gray-500" id="earningsBtn">
+                <span class="text-xl mb-1">💰</span>
+                <span class="text-xs">Earnings</span>
+            </button>
+            <button onclick="switchTab('profile')" class="flex flex-col items-center py-2 px-2 text-gray-500" id="profileBtn">
+                <span class="text-xl mb-1">👤</span>
+                <span class="text-xs">Profile</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Order Popup Modal -->
+    <div id="orderPopup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-6 m-4 max-w-sm w-full">
+            <div class="text-center mb-4">
+                <div class="text-4xl mb-2">📦</div>
+                <h3 class="text-lg font-semibold mb-2">New Order Found!</h3>
+            </div>
+            
+            <div id="popupOrderDetails" class="mb-4">
+                <div class="bg-gray-50 rounded-lg p-3 mb-3">
+                    <h4 class="font-semibold text-sm mb-2">Order #NJ2024004</h4>
+                    <p class="text-xs text-gray-600 mb-2">Fresh Groceries • 5 items</p>
+                    
+                    <div class="space-y-1 text-xs">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-green-600">🏪</span>
+                            <span>Ninja Delivery Store, Mall Road</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-red-600">📍</span>
+                            <span>Rahul Kumar, Mcleod Ganj</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mb-3">
+                    <span class="text-lg font-bold text-green-600">₹75</span>
+                    <p class="text-xs text-gray-600">Delivery Fee</p>
+                </div>
+            </div>
+
+            <div class="flex space-x-2">
+                <button onclick="acceptOrderPopup()" class="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+                    ✅ Accept
+                </button>
+                <button onclick="declineOrderPopup()" class="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors">
+                    ❌ Decline
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-6 m-4 max-w-sm w-full">
+            <div class="text-center">
+                <div class="text-6xl mb-4">✅</div>
+                <h3 class="text-lg font-semibold mb-2">Delivery Completed!</h3>
+                <p class="text-gray-600 mb-4">Great job! Your earnings have been updated.</p>
+                <button onclick="closeModal()" class="w-full bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition-colors">
+                    Continue
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let deliveryCount = 12;
+        let earnings = 840;
+        let bonusTarget = 15;
+        let currentTab = 'home';
+        let isOnline = true;
+
+        function toggleOnlineStatus() {
+            isOnline = !isOnline;
+            const button = event.target.closest('button');
+            const statusDot = document.querySelector('.status-badge');
+            const statusText = document.querySelector('.status-badge').nextElementSibling;
+            
+            if (isOnline) {
+                button.innerHTML = '<div class="text-lg mb-1">🟢</div>Go Offline';
+                button.className = 'bg-green-100 text-green-800 py-3 px-4 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors';
+                statusDot.style.backgroundColor = '#22c55e';
+                statusText.textContent = 'Online';
+            } else {
+                button.innerHTML = '<div class="text-lg mb-1">🔴</div>Go Online';
+                button.className = 'bg-red-100 text-red-800 py-3 px-4 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors';
+                statusDot.style.backgroundColor = '#ef4444';
+                statusText.textContent = 'Offline';
+            }
+        }
+
+        function emergencySupport() {
+            alert('🚨 Emergency Support\n\nConnecting you to emergency helpline...\n\nEmergency Number: 1800-NINJA-911\nThis would normally call emergency services.');
+        }
+
+        function fuelReminder() {
+            alert('⛽ Fuel Break\n\nYour status has been updated to "On Fuel Break".\nNearby fuel stations:\n• HP Petrol Pump - 0.5km\n• Indian Oil - 1.2km');
+        }
+
+        function reportIssue() {
+            const issues = ['Vehicle breakdown', 'Customer not responding', 'Wrong address', 'Payment issue', 'Other'];
+            const issue = prompt('📝 Report Issue\n\nSelect issue type:\n1. Vehicle breakdown\n2. Customer not responding\n3. Wrong address\n4. Payment issue\n5. Other\n\nEnter number (1-5):');
+            
+            if (issue && issue >= 1 && issue <= 5) {
+                alert(`Issue reported: ${issues[issue-1]}\n\nTicket #NJ${Date.now()}\nSupport team will contact you shortly.`);
+            }
+        }
+
+        function callCustomer() {
+            alert('📞 Calling customer...\n\nThis would normally open your phone app to call the customer directly.');
+        }
+
+        function openNavigation() {
+            alert('🗺️ Opening navigation...\n\nThis would normally open Google Maps or your preferred navigation app with the delivery address.');
+        }
+
+        function markDelivered() {
+            // Update stats
+            deliveryCount++;
+            earnings += 70;
+            
+            document.getElementById('todayDeliveries').textContent = deliveryCount;
+            document.getElementById('todayEarnings').textContent = '₹' + earnings;
+            
+            // Update bonus progress
+            updateBonusProgress();
+            
+            // Hide current delivery
+            document.getElementById('currentDelivery').style.display = 'none';
+            
+            // Show success modal
+            document.getElementById('successModal').classList.remove('hidden');
+            
+            // Auto-assign next order after modal closes
+            setTimeout(() => {
+                if (!document.getElementById('successModal').classList.contains('hidden')) {
+                    closeModal();
+                }
+            }, 3000);
+        }
+
+        function updateBonusProgress() {
+            const progress = Math.min((deliveryCount / bonusTarget) * 100, 100);
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('bonusProgress').textContent = deliveryCount + '/' + bonusTarget;
+            
+            const remaining = Math.max(bonusTarget - deliveryCount, 0);
+            const bonusText = document.querySelector('#bonusProgress').parentElement.parentElement.querySelector('p');
+            if (remaining > 0) {
+                bonusText.textContent = `Complete ${remaining} more deliveries to earn ₹200 bonus! 🎯`;
+            } else {
+                bonusText.textContent = `Bonus earned! Great job today! 🎉`;
+                bonusText.classList.add('text-red-600', 'font-medium');
+            }
+        }
+
+        function endTrip() {
+            if (confirm('Are you sure you want to end this trip?')) {
+                document.getElementById('currentDelivery').style.display = 'none';
+                alert('Trip ended. You can now accept new orders.');
+            }
+        }
+
+        function acceptOrder(orderId) {
+            // Simulate accepting an order
+            const orderElement = event.target.closest('.delivery-card');
+            orderElement.style.transform = 'scale(0.95)';
+            orderElement.style.opacity = '0.7';
+            
+            setTimeout(() => {
+                orderElement.remove();
+                
+                // Update current delivery
+                document.getElementById('currentDelivery').innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="font-semibold text-gray-800">Order #${orderId}</h3>
+                            <p class="text-sm text-gray-600">Accepted • Heading to pickup</p>
+                        </div>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">Accepted</span>
+                    </div>
+                    
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-green-600">📍</span>
+                            <div>
+                                <p class="text-sm font-medium">Pickup: Ninja Delivery Store</p>
+                                <p class="text-xs text-gray-600">Heading there now...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-2">
+                        <button onclick="callCustomer()" class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                            📞 Call Customer
+                        </button>
+                        <button onclick="openNavigation()" class="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+                            🗺️ Navigate
+                        </button>
+                    </div>
+                `;
+                document.getElementById('currentDelivery').style.display = 'block';
+            }, 300);
+        }
+
+        function acceptOrderPopup() {
+            // Hide popup
+            document.getElementById('orderPopup').classList.add('hidden');
+            
+            // Switch to home tab and update current delivery
+            switchTab('home');
+            
+            // Update current delivery with scanned order
+            document.getElementById('currentDelivery').innerHTML = `
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Order #NJ2024004</h3>
+                        <p class="text-sm text-gray-600">Fresh Groceries • 5 items</p>
+                    </div>
+                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">Trip Started</span>
+                </div>
+                
+                <div class="space-y-2 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-green-600">🏪</span>
+                        <div>
+                            <p class="text-sm font-medium">Pickup: Ninja Delivery Store</p>
+                            <p class="text-xs text-gray-600">Mall Road, Dharamshala</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-red-600">📍</span>
+                        <div>
+                            <p class="text-sm font-medium">Drop: Rahul Kumar</p>
+                            <p class="text-xs text-gray-600">Mcleod Ganj, Near Main Square</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex space-x-2">
+                    <button onclick="markDelivered()" class="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+                        ✅ Delivered
+                    </button>
+                </div>
+                <button onclick="endTrip()" class="w-full mt-2 bg-gray-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors">
+                    🏁 End Trip
+                </button>
+            `;
+            document.getElementById('currentDelivery').style.display = 'block';
+            
+            // Update map area
+            document.querySelector('#mapArea .text-xs').textContent = 'Ninja Delivery Store → Mcleod Ganj';
+            
+            // Reset scanner
+            document.getElementById('scannerArea').innerHTML = `
+                <div class="text-center">
+                    <div class="text-6xl mb-2">📱</div>
+                    <p class="text-gray-600 text-sm">Tap to scan QR code</p>
+                </div>
+            `;
+        }
+
+        function declineOrderPopup() {
+            document.getElementById('orderPopup').classList.add('hidden');
+            
+            // Reset scanner
+            document.getElementById('scannerArea').innerHTML = `
+                <div class="text-center">
+                    <div class="text-6xl mb-2">📱</div>
+                    <p class="text-gray-600 text-sm">Tap to scan QR code</p>
+                </div>
+            `;
+            
+            alert('Order declined. You can scan another QR code.');
+        }
+
+        function closeModal() {
+            document.getElementById('successModal').classList.add('hidden');
+        }
+
+        function startScanning() {
+            const scannerArea = document.getElementById('scannerArea');
+            scannerArea.innerHTML = `
+                <div class="text-center">
+                    <div class="text-6xl mb-2 animate-pulse">📷</div>
+                    <p class="text-red-600 text-sm font-medium">Scanning...</p>
+                </div>
+            `;
+            
+            // Simulate scanning process
+            setTimeout(() => {
+                scannerArea.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-6xl mb-2">✅</div>
+                        <p class="text-green-600 text-sm font-medium">QR Code Detected!</p>
+                    </div>
+                `;
+                
+                // Switch to orders tab and show popup
+                setTimeout(() => {
+                    switchTab('orders');
+                    document.getElementById('orderPopup').classList.remove('hidden');
+                }, 1000);
+            }, 2000);
+        }
+
+        function acceptScannedOrder() {
+            // Hide scan tab content and switch to home
+            document.getElementById('scannedOrder').classList.add('hidden');
+            document.getElementById('scannerArea').innerHTML = `
+                <div class="text-center">
+                    <div class="text-6xl mb-2">📱</div>
+                    <p class="text-gray-600 text-sm">Tap to scan QR code</p>
+                </div>
+            `;
+            
+            // Switch to home tab and update current delivery
+            switchTab('home');
+            
+            // Update current delivery with scanned order
+            document.getElementById('currentDelivery').innerHTML = `
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Order #NJ2024004</h3>
+                        <p class="text-sm text-gray-600">Fresh Groceries • 5 items</p>
+                    </div>
+                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">Trip Started</span>
+                </div>
+                
+                <div class="space-y-2 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-green-600">🏪</span>
+                        <div>
+                            <p class="text-sm font-medium">Pickup: Ninja Delivery Store</p>
+                            <p class="text-xs text-gray-600">Mall Road, Dharamshala</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-red-600">📍</span>
+                        <div>
+                            <p class="text-sm font-medium">Drop: Rahul Kumar</p>
+                            <p class="text-xs text-gray-600">Mcleod Ganj, Near Main Square</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex space-x-2">
+                    <button onclick="callCustomer()" class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                        📞 Call Customer
+                    </button>
+                    <button onclick="openNavigation()" class="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+                        🗺️ Navigate
+                    </button>
+                    <button onclick="markDelivered()" class="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+                        ✅ Delivered
+                    </button>
+                </div>
+                <button onclick="endTrip()" class="w-full mt-2 bg-gray-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors">
+                    🏁 End Trip
+                </button>
+            `;
+            document.getElementById('currentDelivery').style.display = 'block';
+        }
+
+        function declineOrder() {
+            document.getElementById('scannedOrder').classList.add('hidden');
+            document.getElementById('scannerArea').innerHTML = `
+                <div class="text-center">
+                    <div class="text-6xl mb-2">📱</div>
+                    <p class="text-gray-600 text-sm">Tap to scan QR code</p>
+                </div>
+            `;
+            alert('Order declined. You can scan another QR code.');
+        }
+
+        function switchTab(tab) {
+            // Hide all tabs
+            document.getElementById('homeTab').classList.add('hidden');
+            document.getElementById('scanTab').classList.add('hidden');
+            document.getElementById('ordersTab').classList.add('hidden');
+            document.getElementById('earningsTab').classList.add('hidden');
+            document.getElementById('profileTab').classList.add('hidden');
+            
+            // Update active tab styling
+            const buttons = document.querySelectorAll('.fixed button');
+            buttons.forEach(btn => {
+                btn.classList.remove('text-red-600');
+                btn.classList.add('text-gray-500');
+            });
+            
+            // Show selected tab and update styling
+            if (tab === 'home') {
+                document.getElementById('homeTab').classList.remove('hidden');
+                document.getElementById('homeBtn').classList.remove('text-gray-500');
+                document.getElementById('homeBtn').classList.add('text-red-600');
+            } else if (tab === 'scan') {
+                document.getElementById('scanTab').classList.remove('hidden');
+                document.getElementById('scanBtn').classList.remove('text-gray-500');
+                document.getElementById('scanBtn').classList.add('text-red-600');
+            } else if (tab === 'orders') {
+                document.getElementById('ordersTab').classList.remove('hidden');
+                document.getElementById('ordersBtn').classList.remove('text-gray-500');
+                document.getElementById('ordersBtn').classList.add('text-red-600');
+            } else if (tab === 'earnings') {
+                document.getElementById('earningsTab').classList.remove('hidden');
+                document.getElementById('earningsBtn').classList.remove('text-gray-500');
+                document.getElementById('earningsBtn').classList.add('text-red-600');
+                // Update earnings tab with current data
+                document.getElementById('earningsDeliveries').textContent = deliveryCount;
+                document.getElementById('earningsTotal').textContent = '₹' + earnings;
+            } else if (tab === 'profile') {
+                document.getElementById('profileTab').classList.remove('hidden');
+                document.getElementById('profileBtn').classList.remove('text-gray-500');
+                document.getElementById('profileBtn').classList.add('text-red-600');
+            }
+            
+            currentTab = tab;
+        }
+
+        // Simulate real-time updates
+        setInterval(() => {
+            const statusDot = document.querySelector('.status-badge');
+            statusDot.style.backgroundColor = statusDot.style.backgroundColor === 'rgb(34, 197, 94)' ? '#10b981' : '#22c55e';
+        }, 2000);
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'975c07b5503d54aa',t:'MTc1NjMwMjU0NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
+
+
+
+
